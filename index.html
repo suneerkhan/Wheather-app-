@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AuraWeather</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="weather-clear">
+
+  <canvas id="particleCanvas"></canvas>
+  <div class="light-overlay" id="lightOverlay"></div>
+  <div class="lightning-flash" id="lightningFlash"></div>
+
+  <div class="app-wrapper">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <i class="fa-solid fa-cloud-sun"></i>
+        <span>AuraWeather</span>
+      </div>
+      <div class="header-right">
+        <!-- Change city button (shown after search) -->
+        <button class="change-city-btn" id="changeCityBtn" onclick="goHome()" style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Change City
+        </button>
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="celsiusBtn" onclick="setUnit('C')">°C</button>
+          <span class="divider">|</span>
+          <button class="unit-btn" id="fahrenheitBtn" onclick="setUnit('F')">°F</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search -->
+    <section class="search-section">
+      <div class="search-wrapper">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="cityInput" placeholder="Search for a city..."
+            autocomplete="off" onkeydown="handleKey(event)" oninput="onSearchInput(event)"/>
+          <button class="gps-btn" onclick="getLocation()" title="Use my location">
+            <i class="fa-solid fa-location-crosshairs"></i>
+          </button>
+          <button class="search-btn" onclick="searchWeather()">Search</button>
+        </div>
+        <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p>Fetching weather data...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-state" id="errorState">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p id="errorMsg">City not found. Try again.</p>
+      <button class="retry-btn" onclick="goHome()">Try Another City</button>
+    </div>
+
+    <!-- Weather Main -->
+    <main class="weather-main" id="weatherMain">
+
+      <div class="location-block">
+        <div class="location-name">
+          <i class="fa-solid fa-location-dot"></i>
+          <h1 id="cityName">--</h1>
+          <span id="countryCode" class="country-tag">--</span>
+        </div>
+        <p class="local-time" id="localTime">--</p>
+        <p class="date-text" id="dateText">--</p>
+      </div>
+
+      <!-- Hero -->
+      <div class="weather-hero">
+        <div class="weather-icon-wrap">
+          <div class="icon-glow-ring"></div>
+          <div class="weather-icon-big" id="weatherIconBig">☀️</div>
+        </div>
+        <div class="temp-block">
+          <h2 class="temperature" id="temperature">--°</h2>
+          <p class="condition" id="condition">--</p>
+          <p class="feels-like">Feels like <span id="feelsLike">--°</span></p>
+        </div>
+        <!-- Radar button inside hero -->
+        <button class="radar-btn" onclick="openRadar()" title="Live Radar">
+          <i class="fa-solid fa-satellite-dish"></i>
+          <span>Live Radar</span>
+        </button>
+      </div>
+
+      <!-- Lifestyle Tips Banner -->
+      <div class="tips-banner" id="tipsBanner">
+        <div class="tips-inner" id="tipsInner"></div>
+      </div>
+
+      <!-- Sun Bar -->
+      <div class="sun-bar-card">
+        <div class="sun-bar-row">
+          <div class="sun-time">
+            <i class="fa-solid fa-sun sun-rise-icon"></i>
+            <span id="sunriseTime">--</span>
+            <span class="sun-label">Sunrise</span>
+          </div>
+          <div class="sun-track">
+            <div class="sun-arc">
+              <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10,55 Q100,-20 190,55" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+                <path id="sunArcFill" d="M10,55 Q100,-20 190,55" fill="none" stroke="rgba(255,200,50,0.8)" stroke-width="2.5" stroke-dasharray="300" stroke-dashoffset="300"/>
+                <circle id="sunDot" cx="10" cy="55" r="6" fill="#ffd700" filter="url(#glow)"/>
+                <defs>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+              </svg>
+            </div>
+          </div>
+          <div class="sun-time">
+            <i class="fa-solid fa-moon sun-set-icon"></i>
+            <span id="sunsetTime">--</span>
+            <span class="sun-label">Sunset</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <i class="fa-solid fa-droplet" style="color:#60a5fa"></i>
+          <span class="stat-label">Humidity</span>
+          <span class="stat-value" id="humidity">--%</span>
+          <div class="stat-bar"><div class="stat-bar-fill" id="humidityBar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-wind" style="color:#a78bfa"></i>
+          <span class="stat-label">Wind</span>
+          <span class="stat-value" id="windSpeed">-- km/h</span>
+          <div class="wind-dir" id="windDir"><i class="fa-solid fa-location-arrow"></i></div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-eye" style="color:#34d399"></i>
+          <span class="stat-label">Visibility</span>
+          <span class="stat-value" id="visibility">-- km</span>
+          <div class="stat-bar"><div class="stat-bar-fill" id="visibilityBar" style="width:0%;background:linear-gradient(90deg,#34d399,#6ee7b7)"></div></div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-gauge-high" style="color:#fb923c"></i>
+          <span class="stat-label">Pressure</span>
+          <span class="stat-value" id="pressure">-- hPa</span>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-sun" style="color:#fbbf24"></i>
+          <span class="stat-label">UV Index</span>
+          <span class="stat-value" id="uvIndex">--</span>
+          <div class="stat-bar"><div class="stat-bar-fill" id="uvBar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-temperature-arrow-up" style="color:#f472b6"></i>
+          <span class="stat-label">High / Low</span>
+          <span class="stat-value" id="highLow">-- / --</span>
+        </div>
+      </div>
+
+      <!-- Hourly Forecast -->
+      <div class="hourly-section">
+        <h3 class="section-title">Hourly Forecast</h3>
+        <div class="hourly-strip" id="hourlyStrip"></div>
+      </div>
+
+      <!-- 5 Day Forecast -->
+      <div class="forecast-section">
+        <h3 class="section-title">5-Day Forecast</h3>
+        <div class="forecast-strip" id="forecastStrip"></div>
+      </div>
+
+      <!-- AQI -->
+      <div class="aqi-section" id="aqiSection">
+        <h3 class="section-title">Air Quality Index</h3>
+        <div class="aqi-bar-wrap">
+          <div class="aqi-bar">
+            <div class="aqi-indicator" id="aqiIndicator"></div>
+          </div>
+          <div class="aqi-labels">
+            <span>Good</span><span>Moderate</span><span>Unhealthy</span><span>Hazardous</span>
+          </div>
+        </div>
+        <p class="aqi-status" id="aqiStatus">--</p>
+      </div>
+
+    </main>
+
+    <!-- Default State -->
+    <div class="default-state" id="defaultState">
+      <div class="default-icon">🌍</div>
+      <h2>Where in the world are you?</h2>
+      <p>Search a city or pick one below</p>
+      <div class="popular-cities">
+        <p class="popular-label">Popular Cities</p>
+        <div class="city-cards">
+          <div class="city-card" onclick="fetchWeatherByCity('Tokyo')"><span class="city-card-emoji">🗼</span><span class="city-card-name">Tokyo</span><span class="city-card-country">Japan</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('London')"><span class="city-card-emoji">🎡</span><span class="city-card-name">London</span><span class="city-card-country">UK</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('New York')"><span class="city-card-emoji">🗽</span><span class="city-card-name">New York</span><span class="city-card-country">USA</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('Dubai')"><span class="city-card-emoji">🏙️</span><span class="city-card-name">Dubai</span><span class="city-card-country">UAE</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('Paris')"><span class="city-card-emoji">🥐</span><span class="city-card-name">Paris</span><span class="city-card-country">France</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('Mumbai')"><span class="city-card-emoji">🌊</span><span class="city-card-name">Mumbai</span><span class="city-card-country">India</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('Sydney')"><span class="city-card-emoji">🦘</span><span class="city-card-name">Sydney</span><span class="city-card-country">Australia</span></div>
+          <div class="city-card" onclick="fetchWeatherByCity('Thiruvananthapuram')"><span class="city-card-emoji">🌴</span><span class="city-card-name">Trivandrum</span><span class="city-card-country">India</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Radar Modal -->
+  <div class="radar-modal" id="radarModal">
+    <div class="radar-modal-inner">
+      <div class="radar-header">
+        <span><i class="fa-solid fa-satellite-dish"></i> Live Weather Radar</span>
+        <button class="radar-close" onclick="closeRadar()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <iframe id="radarFrame" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
