@@ -8,7 +8,7 @@ A beautiful, feature-rich weather app built with vanilla HTML, CSS, and JavaScri
 
 ## 🚀 Live Demo
 
-[View Live →](https://suneerkhan.github.io/weather-app)
+[View Live →](https://suneerkhan.github.io/Wheather-app-/)
 
 ---
 
