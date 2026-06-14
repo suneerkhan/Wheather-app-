@@ -62,18 +62,6 @@ weather-app/
 
 ---
 
-## ⚙️ Setup
-
-1. Clone the repo
-   ```bash
-   git clone https://github.com/suneerkhan/weather-app.git
-   ```
-2. Get a free API key from [openweathermap.org](https://openweathermap.org/api)
-3. Open `script.js` and replace line 2:
-   ```js
-   const API_KEY = 'YOUR_API_KEY_HERE';
-   ```
-4. Open `index.html` in your browser
 
 ---
 
