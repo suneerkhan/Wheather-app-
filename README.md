@@ -2,8 +2,7 @@
 
 A beautiful, feature-rich weather app built with vanilla HTML, CSS, and JavaScript — powered by the OpenWeatherMap API.
 
-> Built as part of a 10-Day Web Development Workshop — Day 5 Task
-
+>
 ---
 
 ## 🚀 Live Demo
